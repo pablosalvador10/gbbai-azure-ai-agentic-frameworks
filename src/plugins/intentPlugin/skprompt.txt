@@ -1,0 +1,34 @@
+[Chat History]
+{{$chat_history}}
+
+User: {{$input}}
+
+----------------------------------------------
+Return the intent of the user. The intent must be one of the following strings:
+
+- how_to: Use this category for questions seeking guidance or instructions on how to perform specific tasks.
+- database: Use this category for questions seeking specific data or information from a database.
+- not_found: Use this category if the intent does not fit either of the above or cannot be determined.
+
+Please only return the intent. Do not provide any additional information.
+
+Examples:
+User question: How do I delete my SIFT project?
+Intent: how_to
+
+User question: How do I code and authorize an invoice in Tungsten?
+Intent: how_to
+
+User question: How do I create a project in SIFT?
+Intent: how_to
+
+User question: Do I need to submit any projects before SIFT locks this month?
+Intent: database
+
+User question: I'm waiting for my project to be reviewed. Who has my project?
+Intent: database
+
+User question: Why was my project most recently rejected and by whom was it rejected?
+Intent: database
+
+Intent:

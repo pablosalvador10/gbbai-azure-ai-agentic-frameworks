@@ -1,5 +1,5 @@
 PYTHON_INTERPRETER = python3
-CONDA_ENV ?= my-template-environment
+CONDA_ENV ?= agentic-framework
 export PYTHONPATH=$(PWD):$PYTHONPATH;
 
 # Target for setting up pre-commit and pre-push hooks

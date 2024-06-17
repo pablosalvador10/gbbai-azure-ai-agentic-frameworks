@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "description": "Given a query and a list of possible intents, detect which intent the input matches",
+  "execution_settings": {
+    "chat-gpt": {
+      "max_tokens": 100,
+      "temperature": 0.1,
+      "top_p": 1.0,
+      "presence_penalty": 0.0,
+      "frequency_penalty": 0.0
+    }
+  },
+    "input_variables": [
+    {
+      "name": "input",
+      "description": "The user's request",
+      "default": ""
+    },
+    {
+      "name": "chat_history",
+      "description": "The chat history",
+      "default": ""
+    }
+  ]
+}
