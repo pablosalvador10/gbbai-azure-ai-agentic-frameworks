@@ -5,6 +5,10 @@ azure-ai-documentintelligence==1.0.0b3
 streamlit>=1.28
 streamlit-chat
 asyncio
+pymupdf
 tiktoken
+requests
+pandas
+biopython
 pyautogen
 semantic-kernel
