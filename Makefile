@@ -62,6 +62,9 @@ define log_section
 	@printf "\n${GREEN}--> $(1)${NC}\n\n"
 endef
 
+run_streamlit:
+	streamlit run src/app/chat_app.py
+
 create_conda_env:
 	@echo "Creating conda environment"
 	conda env create -f environment.yaml
