@@ -3,6 +3,10 @@ import yaml
 from typing import Dict, List, Optional, Union, Callable, Literal, Any
 import os
 import streamlit as st
+from utils.ml_logging import get_logger
+from streamlit import container
+
+logger = get_logger()
 
 def initialize_session_state(vars: List[str], initial_values: Dict[str, Any]) -> None:
     """
@@ -20,34 +24,59 @@ session_vars = [
     "conversation_history",
     "chat_history",
     "messages",
+    "deployments",
 ]
+
 initial_values = {
     "conversation_history": [],
     "chat_history": [
         {
             "role": "assistant",
             "content": (
-                "🚀 Ask away! I am all ears and ready to dive into your queries. "
-                "I'm here to make sense of the numbers from your benchmarks and support you during your analysis! 😄📊"
+                "🚀 Hi there! "
+                "Please ask me a question, and I can look up sources like PubMed to give you the best answer. "
+                "I'm also happy to write drafts of research documents as needed. 😄"
             ),
         }
     ],
-
+    "messages": [
+        {
+            "role": "assistant",
+            "content": (
+                "🚀 Hi there! "
+                "Please ask me a question, and I can look up sources like PubMed to give you the best answer. "
+                "I'm also happy to write drafts of research documents as needed. 😄"
+            ),
+        }
+    ],
+    "deployments": {},
 }
 
 initialize_session_state(session_vars, initial_values)
 
-def get_llm_config() -> Dict[str, List[Dict[str, str]]]:
+
+def get_llm_config(
+    azure_openai_key: Optional[str] = None,
+    azure_aoai_chat_model_name_deployment_id: Optional[str] = None,
+    azure_openai_api_endpoint: Optional[str] = None,
+    azure_openai_api_version: Optional[str] = None
+) -> Dict[str, List[Dict[str, str]]]:
     """
-    Generate a configuration list dictionary for the LLM from environment variables.
+    Generate a configuration list dictionary for the LLM from provided parameters or environment variables.
+
+    Args:
+        azure_openai_key (Optional[str]): The Azure OpenAI key.
+        azure_aoai_chat_model_name_deployment_id (Optional[str]): The Azure AOAI chat model name deployment ID.
+        azure_openai_api_endpoint (Optional[str]): The Azure OpenAI API endpoint.
+        azure_openai_api_version (Optional[str]): The Azure OpenAI API version.
 
     Returns:
         Dict[str, List[Dict[str, str]]]: A dictionary containing the configuration list.
     """
-    azure_openai_key = os.getenv("AZURE_OPENAI_KEY")
-    azure_aoai_chat_model_name_deployment_id = os.getenv("AZURE_AOAI_CHAT_MODEL_NAME_DEPLOYMENT_ID")
-    azure_openai_api_endpoint = os.getenv("AZURE_OPENAI_API_ENDPOINT")
-    azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+    azure_openai_key = azure_openai_key or os.getenv("AZURE_OPENAI_KEY")
+    azure_aoai_chat_model_name_deployment_id = azure_aoai_chat_model_name_deployment_id or os.getenv("AZURE_AOAI_CHAT_MODEL_NAME_DEPLOYMENT_ID")
+    azure_openai_api_endpoint = azure_openai_api_endpoint or os.getenv("AZURE_OPENAI_API_ENDPOINT")
+    azure_openai_api_version = azure_openai_api_version or os.getenv("AZURE_OPENAI_API_VERSION")
 
     return {
         "config_list": [
@@ -80,7 +109,7 @@ class SuperConversableAgent(ConversableAgent):
         description: Optional[str] = None,
         chat_messages: Optional[Dict[ConversableAgent, List[Dict]]] = None,
         avatar: str = '🤖',
-        silent: bool = False
+        verbose: bool = True,
     ):
         """
         Initialize the SuperConversableAgent with LLM configuration.
@@ -98,10 +127,10 @@ class SuperConversableAgent(ConversableAgent):
             description (str, optional): Description of the agent.
             chat_messages (dict, optional): Initial chat messages for the agent.
             avatar (str, optional): The avatar for the agent. Defaults to a robot emoji.
-            silent (bool, optional): Whether the agent should process messages silently. Defaults to False.
+            verbose (bool, optional): Whether the agent should process messages silently. Defaults to False.
         """
         self.avatar = avatar
-        self.silent = silent
+        self.verbose = verbose
         super().__init__(
             name=name,
             system_message=system_message,
@@ -113,26 +142,56 @@ class SuperConversableAgent(ConversableAgent):
             llm_config=llm_config,
             default_auto_reply=default_auto_reply,
             description=description,
-            chat_messages=chat_messages
+            chat_messages=chat_messages,
         )
 
-    def _process_received_message(self, message, sender, silent=None):
-        """
-        Process received message and log it in Streamlit chat interface.
-    
-        Args:
-            message (str): The message content.
-            sender (ConversableAgent): The sender of the message.
-            silent (bool, optional): Whether the message should be processed silently. Defaults to the instance's silent attribute.
-        """
-        if silent is None:
-            silent = self.silent
-        if not silent:
+    def _process_received_message(self, message, sender, silent):
+            """
+            Process received message and log it in Streamlit chat interface.
+        
+            Args:
+                message (str): The message content.
+                sender (ConversableAgent): The sender of the message.
+                silent (bool, optional): Whether the message should be processed silently. Defaults to the instance's silent attribute.
+            """
+        
             if 'chat_history' not in st.session_state:
                 st.session_state.chat_history = []
-            st.session_state.chat_history.append({'role': sender.name, 'content': message})
     
-        return super()._process_received_message(message, sender, silent)
+            st.session_state.chat_history.append({'role': sender.name, 'content': message})
+            print(f"Updated chat history: {st.session_state.chat_history}")
+
+            if self.verbose:
+                self._display_message(sender, message)
+        
+            return super()._process_received_message(message, sender, silent)
+    
+    def _display_message(self, sender, message):
+            """
+            Helper function to display a message in the chat interface.
+        
+            Args:
+                sender (ConversableAgent): The sender of the message.
+                message (str): The message content.
+            """
+            message_html = f"<div style='padding: 10px; border-radius: 5px;'>{message}</div>"
+            print(f"Displaying message: {message_html}")
+
+            agent_name_to_emoji = {
+                "User": "👤",
+                "MedicalResearchPlanner": "🧑🏿‍💼",
+                "FinalMedicalReviewer": "👨🏽‍⚕️",
+                "MedicalResearcher": "👩‍⚕️"
+            }
+
+            if message["name"] in agent_name_to_emoji:
+                avatar = agent_name_to_emoji[message["name"]]
+            else:
+                avatar = "❓"  
+
+            with st.chat_message(self.name, avatar=self.avatar):
+                formatted_message = f"**{self.name}**\n\n{message['content']}"
+                st.markdown(formatted_message)
 
     @classmethod
     def load_agent(cls, yaml_file: str) -> 'SuperConversableAgent':

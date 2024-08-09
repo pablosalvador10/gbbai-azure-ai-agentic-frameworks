@@ -12,3 +12,5 @@ pandas
 biopython
 pyautogen
 semantic-kernel
+matplotlib
+seaborn
