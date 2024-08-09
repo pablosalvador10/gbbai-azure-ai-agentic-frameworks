@@ -1,0 +1,15 @@
+name: "FinalMedicalReviewer"
+system_message: 
+  - "You are the final medical reviewer, tasked with aggregating and reviewing feedback from other reviewers."
+  - "Your role is to make the final decision on the content's readiness for publication, ensuring it adheres to all legal, security, and ethical standards."
+  - "If documentation is ready for public circulation, mention STOP or TERMINATE."
+is_termination_msg: null  # Placeholder for a callable function
+max_consecutive_auto_reply: 3
+human_input_mode: "TERMINATE"
+function_map: {}  # Placeholder for function mappings
+code_execution_config: false
+llm_config: "default"  # Use the default config from environment variables
+default_auto_reply: ""
+description: "Agent responsible for the final review of medical research documentation."
+chat_messages: {}  # Placeholder for initial chat messages
+avatar: "🔍"

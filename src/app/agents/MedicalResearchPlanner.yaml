@@ -1,0 +1,15 @@
+name: "MedicalResearchPlanner"
+system_message: 
+  - "Given a research task, your role is to determine the specific information needed to comprehensively support the research."
+  - "You will assess the task's progress and delegate sub-tasks to other agents as needed."
+  - "If no more information is needed and document looks good, mention STOP or TERMINATE."
+is_termination_msg: null  # Placeholder for a callable function
+max_consecutive_auto_reply: 5
+human_input_mode: "TERMINATE"
+function_map: {}  # Placeholder for function mappings
+code_execution_config: false
+llm_config: "default"  # Use the default config from environment variables
+default_auto_reply: ""
+description: "Agent responsible for planning medical research tasks."
+chat_messages: {}  # Placeholder for initial chat messages
+avatar: "📝"

@@ -1,93 +1,98 @@
 import streamlit as st
 import asyncio
-from dotenv import load_dotenv
-import os
-from autogen import ConversableAgent, GroupChat, GroupChatManager
+from autogen import GroupChat, GroupChatManager
+from src.app.medicalAgents import medical_research_planner, final_medical_reviewer, medical_researcher
+from src.app.autogenhelper import get_llm_config
 from typing import List, Dict, Any
+import autogen
+import re
+from utils.ml_logging import get_logger
 
-# Function to initialize llm_config
-def initialize_llm_config():
-    global llm_config  # Declare llm_config as global to modify it
-    if 'llm_config' not in globals():  # Check if llm_config is not already defined
-        # Load environment variables from a .env file
-        load_dotenv()
+# Set up logger
+logger = get_logger()
 
-        # Azure Open AI Completion Configuration
-        AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
-        AZURE_AOAI_CHAT_MODEL_NAME_DEPLOYMENT_ID = os.getenv("AZURE_AOAI_CHAT_MODEL_NAME_DEPLOYMENT_ID")
-        AZURE_OPENAI_API_ENDPOINT = os.getenv("AZURE_OPENAI_API_ENDPOINT")
-        AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
+def initialize_session_state(vars: List[str], initial_values: Dict[str, Any]) -> None:
+    """
+    Initialize Streamlit session state with default values if not already set.
 
-        llm_config = {
-            "config_list": [
-                {
-                    "model": AZURE_AOAI_CHAT_MODEL_NAME_DEPLOYMENT_ID,
-                    "api_type": "azure",
-                    "api_key": AZURE_OPENAI_KEY,
-                    "base_url": AZURE_OPENAI_API_ENDPOINT,
-                    "api_version": AZURE_OPENAI_API_VERSION
-                }
-            ]
+    :param vars: List of session state variable names.
+    :param initial_values: Dictionary of initial values for the session state variables.
+    """
+    for var in vars:
+        if var not in st.session_state:
+            st.session_state[var] = initial_values.get(var, None)
+
+
+session_vars = [
+    "conversation_history",
+    "chat_history",
+    "messages",
+    "agents_loaded",
+]
+initial_values = {
+    "conversation_history": [],
+    "chat_history": [
+        {
+            "role": "assistant",
+            "content": (
+                "🚀 Ask away! I am all ears and ready to dive into your queries. "
+                "I'm here to make sense of the numbers from your benchmarks and support you during your analysis! 😄📊"
+            ),
         }
+    ],
+    "messages": [
+        {
+            "role": "assistant",
+            "content": (
+                "🚀 Ask away! I am all ears and ready to dive into your queries. "
+                "I'm here to make sense of the numbers from your benchmarks and support you during your analysis! 😄📊"
+            ),
+        },
+    ],
+    "agents_loaded": False
 
-    return llm_config
-
-if "llm_initiated" not in st.session_state:
-    st.session_state.llm_initiated = initialize_llm_config()  
-
-# Set up page title and description
-st.set_page_config(page_title="Medical Research Chat App", page_icon="🤖", layout="wide")
-
-st.markdown(
-    "This is a demo of AutoGen chat agents designed for medical research. You can use it to chat with OpenAI's GPT-4 models. "
-    "They are able to execute commands, answer questions, and even write research documents."
-)
-
-# Trackable agents for displaying messages in Streamlit
-class TracableConversableAgent(ConversableAgent):
-    def _process_received_message(self, message, sender, silent):
-        if 'function_call' not in message:
-            with st.chat_message(sender.name, avatar="👤"):
-                st.markdown(message['content'])
-        return super()._process_received_message(message, sender, silent)
-
-# Define the agents
-medical_research_planner = TracableConversableAgent(
-    name="MedicalResearchPlanner",
-    system_message= "Given a research task, your role is to determine the specific information needed to comprehensively support the research. "
-    "You will assess the task's progress and delegate sub-tasks to other agents as needed. ",
-    llm_config=st.session_state.llm_initiated,
-)
-
-final_medical_reviewer = TracableConversableAgent(
-    name="FinalMedicalReviewer",
-    system_message="You are the final medical reviewer, tasked with aggregating and reviewing feedback from other reviewers. "
-                  "Your role is to make the final decision on the content's readiness for publication, ensuring it adheres to all legal, "
-                  "security, and ethical standards. If documentation is reduced to public circulation, mention STOP DOCUMENT LOOKS GOOD.",
-    llm_config=st.session_state.llm_initiated,
-)
-
-medical_researcher = TracableConversableAgent(
-    name="MedicalResearcher",
-    system_message="As a Medical Researcher, your role is to draft a comprehensive manuscript detailing your study's findings. "
-                   "Ensure the manuscript is scientifically robust, covering all critical aspects of your research.",
-    llm_config=st.session_state.llm_initiated,
-)
-
-agents_dict = {
-    "MedicalResearchPlanner": medical_research_planner,
-    "FinalMedicalReviewer": final_medical_reviewer,
-    "MedicalResearcher": medical_researcher
 }
 
-# Define the group chat for the medical use case
+initialize_session_state(session_vars, initial_values)
+    
+from utils.ml_logging import get_logger
+logger = get_logger()
+ 
+def initialize_agents():
+    agents_loaded = False  # Initialize the variable to False
+
+    if 'MedicalResearchPlanner' not in st.session_state:
+        st.session_state.MedicalResearchPlanner = medical_research_planner
+    if 'FinalMedicalReviewer' not in st.session_state:
+        st.session_state.FinalMedicalReviewer = final_medical_reviewer
+    if 'MedicalResearcher' not in st.session_state:
+        st.session_state.MedicalResearcher = medical_researcher
+
+    if ('MedicalResearchPlanner' in st.session_state and
+        'FinalMedicalReviewer' in st.session_state and
+        'MedicalResearcher' in st.session_state):
+        agents_loaded = True
+
+    st.session_state.agents_loaded = agents_loaded
+
+initialize_agents()
+
+st.set_page_config(page_title="Medical Research Chat App", page_icon="🤖", layout="wide")
+
+agents_dict = {
+    "MedicalResearchPlanner": st.session_state.MedicalResearcher,
+    "FinalMedicalReviewer": st.session_state.FinalMedicalReviewer,
+    "MedicalResearcher": st.session_state.MedicalResearcher
+}
+
 medical_groupchat = GroupChat(
     agents=[
-        agents_dict["MedicalResearchPlanner"], agents_dict["FinalMedicalReviewer"], 
+        agents_dict["MedicalResearchPlanner"], 
+        agents_dict["FinalMedicalReviewer"], 
         agents_dict["MedicalResearcher"]
     ],
     messages=[],
-    max_round=10,
+    max_round=3,
     allowed_or_disallowed_speaker_transitions={
         agents_dict["MedicalResearchPlanner"]: [
             agents_dict["FinalMedicalReviewer"], agents_dict["MedicalResearcher"]
@@ -102,54 +107,94 @@ medical_groupchat = GroupChat(
     speaker_transitions_type="allowed",
 )
 
-# Initialize the GroupChatManager with the medical group chat and LLM configuration
+llm_config = get_llm_config()
+
 medical_manager = GroupChatManager(
-    groupchat=medical_groupchat, llm_config=st.session_state.llm_initiated
+    groupchat=medical_groupchat, llm_config=llm_config
 )
 
-# Setup main area: user input and chat messages
-with st.container():
-    # Assuming st.session_state.chat_history is initialized somewhere in your code
+def initialize_chatbot() -> None:
+    """
+    Initialize a chatbot interface for user interaction with enhanced features.
+    """
+    st.markdown(
+        "<h4 style='text-align: center;'>AgentBuddy 🤖</h4>",
+        unsafe_allow_html=True,
+    )
+
     if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-    
-    user_input = st.text_input("User Input", placeholder="Type your message here...")
-    
-    # Check if the current input has already been processed
-    if user_input and user_input not in st.session_state.chat_history:
-        # Add the current input to the chat history to avoid repetition
-        st.session_state.chat_history.append(user_input)
-    
-        # Create an event loop: this is needed to run asynchronous functions
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    
-        async def initiate_chat():
-            with st.container():
-                st.markdown(f"**User**: {user_input}")
-    
-            # Define a custom termination check function
-            def is_termination_msg_from_final_reviewer(message, sender):
-                # Check if the sender is the FinalMedicalReviewer and the message contains the termination phrase, ignoring case
-                return sender.name == "FinalMedicalReviewer" and "stop document looks good" in message.get("content", "").lower()
-    
-            # Initiate the chat with the custom termination check
-            result = await medical_research_planner.a_initiate_chat(
+        st.session_state.chat_history = [
+        {
+            "role": "assistant",
+            "content": (
+                "🚀 Ask away! I am all ears and ready to dive into your queries. "
+                "I'm here to make sense of the numbers from your benchmarks and support you during your analysis! 😄📊"
+            ),
+        }
+    ]
+        
+    respond_conatiner = st.container(height=400)
+
+    with respond_conatiner:
+        for message in st.session_state.chat_history:
+            role = message["role"]
+            content = message["content"]
+            avatar_style = "🧑‍💻" if role == "user" else "🤖"
+            with st.chat_message(role, avatar=avatar_style):
+                st.markdown(
+                    f"<div style='padding: 10px; border-radius: 5px;'>{content}</div>",
+                    unsafe_allow_html=True,
+                )
+    warning_issue_quality = st.empty()
+    if st.session_state.get("agents_loaded") is False:
+        warning_issue_quality.warning(
+            "Oops! It seems I'm currently unavailable. 😴 Please ensure the LLM is configured correctly in the Benchmark Center and Buddy settings. Need help? Refer to the 'How To' guide for detailed instructions! 🧙"
+        )
+
+    prompt = st.chat_input("Ask away!")
+    if prompt:
+        with respond_conatiner:
+            st.session_state.chat_history.append({"role": "user", "content": prompt})
+            with st.chat_message('human', avatar='🧑‍💻'):
+                st.markdown(
+                    f"<div style='padding: 10px; border-radius: 5px;'>{prompt}</div>",
+                    unsafe_allow_html=True,
+                )
+            logger.info(f"User input: {prompt}")
+            terminate_pattern = re.compile(r".*STOP.*", re.IGNORECASE)
+            terminate_variation_pattern = re.compile(r".*TERMINATED.*", re.IGNORECASE)
+            finalize_pattern = re.compile(r".*TERMINATE.*", re.IGNORECASE)
+
+            is_termination_msg = lambda x: any([
+                terminate_pattern.search(x.get("content", "")),
+                terminate_variation_pattern.search(x.get("content", "")),
+                finalize_pattern.search(x.get("content", "")),
+            ])
+
+            # Start logging with logger_type and the filename to log to
+            logging_session_id = autogen.runtime_logging.start(logger_type="file", config={"filename": "runtime.log"})
+            print("Logging session ID: " + str(logging_session_id))
+
+            result = medical_research_planner.initiate_chat(
                 recipient=medical_manager,
-                message=user_input,
-                max_turns=5,
-                is_termination_msg=is_termination_msg_from_final_reviewer
+                message=prompt,
+                max_turns=2,
+                is_termination_msg=is_termination_msg
             )
+            autogen.runtime_logging.stop()
     
-            # If the chat is terminated, display the final approval message
-            if result.get("terminated", False):
-                with st.container():
-                    st.markdown("**Final document is being approved**")
-            else:
-                st.stop()  # Stop code execution if not terminated
+
+
+def main():
+    """
+    Main function to run the chatbot interface.
+    """
+    st.markdown(
+    "This is a demo of AutoGen chat agents designed for medical research. You can use it to chat with OpenAI's GPT-4 models. "
+    "They are able to execute commands, answer questions, and even write research documents.")
+    initialize_chatbot()
     
-        # Run the asynchronous function within the event loop
-        loop.run_until_complete(initiate_chat())
-    
-        # Close the event loop
-        loop.close()
+
+if __name__ == "__main__":
+    main()
+ 

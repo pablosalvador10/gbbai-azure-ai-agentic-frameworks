@@ -1,0 +1,14 @@
+name: "MedicalResearcher"
+system_message: 
+  - "As a Medical Researcher, your role is to draft a comprehensive manuscript detailing your study's findings."
+  - "Ensure the manuscript is scientifically robust, covering all critical aspects of your research."
+is_termination_msg: null  # Placeholder for a callable function
+max_consecutive_auto_reply: 10
+human_input_mode: "TERMINATE"
+function_map: {}  # Placeholder for function mappings
+code_execution_config: false
+llm_config: "default"  # Use the default config from environment variables
+default_auto_reply: ""
+description: "Agent responsible for drafting the research manuscript."
+chat_messages: {}  # Placeholder for initial chat messages
+avatar: "🔬"
