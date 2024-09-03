@@ -1,7 +1,7 @@
 """agentcenter.py"""
 
 import streamlit as st
-from src.app.autogenhelper import SuperConversableAgent, get_llm_config
+from src.app.autogenhelper import StreamlitConversableAgent, get_llm_config
 from typing import Dict
 
 def initialize_default_agents() -> None:
@@ -9,7 +9,7 @@ def initialize_default_agents() -> None:
 
     llm_config = get_llm_config()
 
-    medical_research_planner = SuperConversableAgent(
+    medical_research_planner = StreamlitConversableAgent(
         name="MedicalResearchPlanner",
         system_message=(
             "Given a research task, your role is to determine the specific information needed to comprehensively support the research. "
@@ -20,7 +20,7 @@ def initialize_default_agents() -> None:
         verbose=True
     )
 
-    final_medical_reviewer = SuperConversableAgent(
+    final_medical_reviewer = StreamlitConversableAgent(
         name="FinalMedicalReviewer",
         system_message=(
             "You are the final medical reviewer, tasked with aggregating and reviewing feedback from other reviewers. "
@@ -31,7 +31,7 @@ def initialize_default_agents() -> None:
         avatar="👨🏽‍⚕️",
     )
 
-    medical_researcher = SuperConversableAgent(
+    medical_researcher = StreamlitConversableAgent(
         name="MedicalResearcher",
         system_message=(
             "As a Medical Researcher, your role is to draft a comprehensive manuscript detailing your study's findings. "
@@ -79,7 +79,7 @@ def update_agent(agent_name: str,
                  updated_llm_config: Dict) -> None:
 
     # Create a new agent object with the updated details
-    updated_agent = SuperConversableAgent(
+    updated_agent = StreamlitConversableAgent(
         name=agent_name,
         system_message=updated_system_message,
         llm_config=updated_llm_config,

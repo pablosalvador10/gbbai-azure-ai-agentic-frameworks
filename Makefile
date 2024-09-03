@@ -1,11 +1,11 @@
-PYTHON_INTERPRETER = python3
+PYTHON_INTERPRETER = python
 CONDA_ENV ?= agentic-framework
 export PYTHONPATH=$(PWD):$PYTHONPATH;
 
 # Target for setting up pre-commit and pre-push hooks
 set_up_precommit_and_prepush:
-	pre-commit install -t pre-commit
-	pre-commit install -t pre-push
+	@pre-commit install -t pre-commit
+	@pre-commit install -t pre-push
 
 # The 'check_code_quality' command runs a series of checks to ensure the quality of your code.
 check_code_quality:
@@ -18,7 +18,7 @@ check_code_quality:
 	# Running 'isort' to sort and organize your imports.
 	@pre-commit run isort --all-files
 
-	# # Running 'flake8' for linting.
+	# Running 'flake8' for linting.
 	@pre-commit run flake8 --all-files
 
 	# Running 'mypy' for static type checking.
@@ -37,13 +37,13 @@ check_code_quality:
 	@pre-commit run interrogate --all-files
 
 	# Running 'bandit' to identify common security issues in your Python code.
-	bandit -c pyproject.toml -r .
+	@bandit -c pyproject.toml -r .
 
 fix_code_quality:
 	# Automatic fixes for code quality (not doing in production only dev cycles)
-	black .
-	isort .
-	ruff --fix .
+	@black .
+	@isort .
+	@ruff --fix .
 
 # Targets for running tests
 run_unit_tests:
@@ -63,20 +63,26 @@ define log_section
 endef
 
 run_streamlit:
-	streamlit run src/app/chat_app.py
+	@streamlit run src/app/chat_app.py
 
 create_conda_env:
 	@echo "Creating conda environment"
-	conda env create -f environment.yaml
+	@conda env create -f environment.yaml
 
 activate_conda_env:
-	@echo "Creating conda environment"
-	conda activate $(CONDA_ENV)
+	@echo "Activating conda environment"
+	@conda activate $(CONDA_ENV)
 
 remove_conda_env:
 	@echo "Removing conda environment"
-	conda env remove --name $(CONDA_ENV)
+	@conda env remove --name $(CONDA_ENV)
 
 run_pylint:
 	@echo "Running linter"
-	find . -type f -name "*.py" ! -path "./tests/*" | xargs pylint -disable=logging-fstring-interpolation > utils/pylint_report/pylint_report.txt
+	@find . -type f -name "*.py" ! -path "./tests/*" | xargs pylint --disable=logging-fstring-interpolation > utils/pylint_report/pylint_report.txt
+
+IMAGE_PATH=https://dm0qx8t0i9gc9.cloudfront.net/thumbnails/video/D8qa-2E/people-walking-through-business-district-in-the-city-at-sunset_bbxoqvaod_thumbnail-1080_09.png
+PROMPT="remove the HM Logo and replace it with a tree"
+
+run_testflow:
+	$(PYTHON_INTERPRETER) C:/Users/pablosal/Desktop/gbbai-azure-ai-agentic-frameworks/src/app/testflow.py --image_path $(IMAGE_PATH) --prompt $(PROMPT)

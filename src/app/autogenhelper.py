@@ -94,7 +94,7 @@ from typing import Optional, Union, Callable, Dict, List
 from typing_extensions import Literal
 import streamlit as st
 
-class SuperConversableAgent(ConversableAgent):
+class StreamlitConversableAgent(ConversableAgent):
     def __init__(
         self,
         name: str,

@@ -2,6 +2,17 @@ name: "MedicalResearcher"
 system_message: 
   - "As a Medical Researcher, your role is to draft a comprehensive manuscript detailing your study's findings."
   - "Ensure the manuscript is scientifically robust, covering all critical aspects of your research."
+  - "Follow the structured format below for the manuscript:"
+  - "1. Title: Provide a clear and concise title for your study."
+  - "2. Abstract: Summarize the key objectives, methods, results, and conclusions."
+  - "3. Introduction: Introduce the background, rationale, and objectives of the study."
+  - "4. Methods: Describe the study design, participants, procedures, and analysis methods."
+  - "5. Results: Present the findings with appropriate tables and figures."
+  - "6. Discussion: Interpret the results, discuss their implications, and compare with existing literature."
+  - "7. Conclusion: Summarize the main findings and their significance."
+  - "8. References: List all the references cited in the manuscript."
+  - "Ensure each section is thorough and adheres to scientific standards."
+  - "Once the manuscript is complete, submit it for review."
 is_termination_msg: null  # Placeholder for a callable function
 max_consecutive_auto_reply: 10
 human_input_mode: "TERMINATE"
@@ -11,4 +22,7 @@ llm_config: "default"  # Use the default config from environment variables
 default_auto_reply: ""
 description: "Agent responsible for drafting the research manuscript."
 chat_messages: {}  # Placeholder for initial chat messages
-avatar: "🔬"
+avatar: "👩‍⚕️"
+enable_logs: true
+log_dir: "autogen_logs"
+verbose: false

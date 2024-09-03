@@ -1,8 +1,8 @@
-from src.app.autogenhelper import SuperConversableAgent, get_llm_config
+from src.app.autogenhelper import StreamlitConversableAgent, get_llm_config
 
 llm_config = get_llm_config()
 
-medical_research_planner = SuperConversableAgent(
+medical_research_planner = StreamlitConversableAgent(
     name="MedicalResearchPlanner",
     system_message=(
         "Given a research task, your role is to determine the specific information needed to comprehensively support the research. "
@@ -12,7 +12,7 @@ medical_research_planner = SuperConversableAgent(
     avatar="📝"
 )
 
-final_medical_reviewer = SuperConversableAgent(
+final_medical_reviewer = StreamlitConversableAgent(
     name="FinalMedicalReviewer",
     system_message=(
         "You are the final medical reviewer, tasked with aggregating and reviewing feedback from other reviewers. "
@@ -23,7 +23,7 @@ final_medical_reviewer = SuperConversableAgent(
     avatar="🔍"
 )
 
-medical_researcher = SuperConversableAgent(
+medical_researcher = StreamlitConversableAgent(
     name="MedicalResearcher",
     system_message=(
         "As a Medical Researcher, your role is to draft a comprehensive manuscript detailing your study's findings. "

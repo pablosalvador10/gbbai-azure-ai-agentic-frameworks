@@ -4,7 +4,7 @@ from autogen import GroupChat, GroupChatManager
 from src.app.autogenhelper import get_llm_config
 from typing import List, Dict, Any, Optional
 import autogen
-from src.app.autogenhelper import SuperConversableAgent, get_llm_config
+from src.app.autogenhelper import StreamlitConversableAgent, get_llm_config
 from src.app.deploymentcenter import load_default_deployment, create_benchmark_center, display_deployments
 from src.app.agentscenter import create_agent_center
 import re

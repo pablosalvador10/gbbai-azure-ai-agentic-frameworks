@@ -1,4 +1,4 @@
-name: "FinalMedicalReviewer"
+name: "MedicalReviewer"
 system_message: 
   - "You are the final medical reviewer, tasked with aggregating and reviewing feedback from other reviewers."
   - "Your role is to make the final decision on the content's readiness for publication, ensuring it adheres to all legal, security, and ethical standards."
@@ -12,4 +12,8 @@ llm_config: "default"  # Use the default config from environment variables
 default_auto_reply: ""
 description: "Agent responsible for the final review of medical research documentation."
 chat_messages: {}  # Placeholder for initial chat messages
-avatar: "🔍"
+avatar: "👨🏽‍⚕️"
+enable_logs: True
+log_dir: "autogen_logs"
+verbose: false
+
