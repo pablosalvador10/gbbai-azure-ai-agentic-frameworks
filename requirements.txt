@@ -10,7 +10,7 @@ tiktoken
 requests
 pandas
 biopython
-pyautogen
+ag2
 semantic-kernel
 matplotlib
 seaborn
